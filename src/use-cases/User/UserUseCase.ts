@@ -9,11 +9,10 @@ import { IPresenter } from "../../Presenters/types/type";
 
 
 export interface IUserUseCase {
-	create(user: IUser, presenter: Pick<IPresenter<IUser>, "one">): Promise<void>
-	register(email: string, passowrd: string, presenter: Pick<IPresenter<IUser>, "one">): Promise<void>
-	one(email: string, presenter: Pick<IPresenter<IUser>, "one">): Promise<void>
-	delete(email: string, presenter: Pick<IPresenter<IUser>, "delete">): Promise<void>
-	all(presenter: Pick<IPresenter<IUser>, "all">): Promise<void>;
+	create(user: IUser, presenter: Pick<IPresenter<User>, "one">): Promise<void>
+	one(id: string, presenter: Pick<IPresenter<User>, "one">): Promise<void>
+	delete(email: string, presenter: Pick<IPresenter<User>, "delete">): Promise<void>
+	all(presenter: Pick<IPresenter<User>, "all">): Promise<void>;
 }
 
 class UserUseCase extends BaseUseCase<IUser> implements IUserUseCase {
@@ -26,46 +25,45 @@ class UserUseCase extends BaseUseCase<IUser> implements IUserUseCase {
 	}
 
 	async create(user: IUser, presenter: IPresenter<IUser>) {
-		super.validate(user);
-		
-		this.isUserExistByEmail(user.eamil);
-		
-		// Create user entity
 		const userEntity = new User();
 		const address = new AddressEntity();
+
+		const { city, zip, country, state } = user.address;
+
+		address.address = user.address.address;
+		address.city = city;
+		address.zip = zip;
+		address.country = country;
+		address.state = state;
+
 		userEntity.address = address;
-		userEntity.eamil = user.eamil;
+		userEntity.email = user.email;
 		userEntity.firstName = user.firstName;
 		userEntity.lastName = user.lastName;
 		userEntity.password = user.password;
 		userEntity.isAdmin = user.role === UserRoles.Admin;
 		userEntity.role = user.role;
+		
+		userEntity.confirmPassword = user.password;
+		userEntity.isMerchant = user.isMerchant;
+
+		await super.validate(userEntity);
 
 		const hasedPassword = await this.auth.hashPassword(user.password);
-
 		userEntity.password = hasedPassword;
 
-		// Save user
 		const savedUser = await this.repository.save(userEntity);
-		
 		presenter.create(savedUser);
 	}
 
-	async one(email: string, presenter: Pick<IPresenter<IUser>, "one">) {
-		const user = await this.repository.findOne({where: { email }});
-		
-		presenter.one(user);
-	}
-
-	async register(email: string, unencryptedPassword: string, presenter: Pick<IPresenter<IUser>, "one">) {
-		const user = await this.repository.findOne({where: { email }});
-		await this.auth.comparePassword(unencryptedPassword, user.password);
+	async one(id: string, presenter: Pick<IPresenter<IUser>, "one">) {
+		const user = await this.repository.findOneOrFail(id);
 		
 		presenter.one(user);
 	}
 
 	async all(presenter: Pick<IPresenter<IUser>, "all">) {
-		const users = await this.repository.find();
+		const users = await this.repository.find({ relations: ["business"]});
 
 		presenter.all(users);
 	}
@@ -75,14 +73,6 @@ class UserUseCase extends BaseUseCase<IUser> implements IUserUseCase {
 		await this.repository.remove(userToRemove);
 
 		presenter.delete(userToRemove.id);
-	}
-
-	private async isUserExistByEmail(email: string) {
-		const user = await this.repository.findOne({where: {email}});
-		
-		if (user && user.eamil === email) {
-			throw new Error("User already exist");
-		}
 	}
 }
 

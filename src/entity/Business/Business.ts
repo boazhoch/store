@@ -1,21 +1,23 @@
-import { Merchant } from "./../Merchant/Merchant";
-import {Entity, Column, OneToMany, PrimaryGeneratedColumn, BaseEntity} from "typeorm";
+// import { Merchant } from "./../Merchant/Merchant";
+import {Entity, Column, OneToMany } from "typeorm";
 import { IsEmail, IsString, Matches } from "class-validator";
 import Base from "../Base/Base";
+import User from "../User/User";
+import { IUser } from "../User/type";
 
-export type IBussiness = {    
+export type IBusiness = {    
     id: string;
     title: string;
     slug: string;
     phone: string;
     email: string;
     desciprtion: string;
-    merchant: Merchant[];
+    merchant: IUser[];
 }
 
 
 @Entity()
-export class Business extends Base implements IBussiness {
+export class Business extends Base implements IBusiness {
     
     @Column()
     @IsString()
@@ -37,6 +39,6 @@ export class Business extends Base implements IBussiness {
     @IsString()
     desciprtion: string;
 
-    @OneToMany(() => Merchant, merchant => merchant.bussiness)
-    merchant: Merchant[];
+    @OneToMany(() => User, user => user.business)
+    merchant: User[];
 }

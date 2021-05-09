@@ -9,6 +9,8 @@ const cors = require("cors");
 
 import {config} from "dotenv";
 import connection from "./interfaces/connection/Connection";
+import error from "./middleware/error/error";
+import passportJwt from "./middleware/passport/passport-jwt";
 
 config();
 
@@ -18,17 +20,18 @@ connection.create().then(async connection => {
 	// create express app
 	const app = express();
 	app.set("subdomain", 1);
-	app.use(passport.initialize());
 	app.use(cors());
 	app.use(bodyParser.urlencoded({
 		extended: true
 	}));
 	app.use(bodyParser.json());
 	app.use(morgan());
+	passportJwt();
 
 	routes().forEach(router => {
 		app.use(router);
 	});
+	app.use(error);
 
 	// start express server
 	app.listen(process.env.PORT || "3000");

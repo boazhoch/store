@@ -6,6 +6,8 @@ export interface IValiditionUseCase {
     validateModel<GenericModel extends object>(model: GenericModel): Promise<ValidationError[]>
 }
 
+export const VALIDATION_ERROR = -1;
+
 export class ValiditionUseCase implements IValiditionUseCase {
 	constructor(private validate: ValidateFn) {
 	}

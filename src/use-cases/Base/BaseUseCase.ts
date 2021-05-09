@@ -1,4 +1,5 @@
-import { IValiditionUseCase } from "../../services/validation/validation";
+import ErrorHandler from "../../interfaces/ErrorHandler/ErrorHandler";
+import { IValiditionUseCase, VALIDATION_ERROR } from "../../services/validation/validation";
 
 interface IBaseUseCase<Model extends object> {
     
@@ -9,13 +10,11 @@ class BaseUseCase<Model extends object> implements IBaseUseCase<Model> {
 	}
 
 	protected async validate(model: Model) {
-		try {
-			const errors = await this.validation.validateModel(model);
-			if(errors) {
-				throw new Error("Errors");
-			}
-		} catch (e) {
-			throw new Error("Error validatiing");
+		const errors = await this.validation.validateModel(model);
+		const errorMessage = errors.map(error => Object.values(error.constraints)).join(", ");
+
+		if(errors.length) {
+			throw new ErrorHandler(VALIDATION_ERROR, `Validation failed, ${errorMessage}`);
 		}
 	}
 }

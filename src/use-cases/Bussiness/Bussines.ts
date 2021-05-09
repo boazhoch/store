@@ -2,88 +2,84 @@ import { IUserUseCase } from "./../User/UserUseCase";
 import { IValiditionUseCase } from "../../services/validation/validation";
 import { Repository } from "typeorm";
 import BaseUseCase from "../Base/BaseUseCase";
-import { Business, IBussiness } from "../../entity/Business/Business";
+import { Business, IBusiness } from "../../entity/Business/Business";
 import { IPresenter } from "../../Presenters/types/type";
 import { IUser } from "../../entity/User/type";
 
 
-export interface IBussinessUseCase {
-	create(bussiness: IBussiness, presenter: IPresenter<IBussiness>): Promise<void>
-	one(bussinessId: string, presenter: IPresenter<IBussiness>): Promise<void>
-	delete(bussinessId: string, presenter: IPresenter<IBussiness>): Promise<void>
-	all(presenter: IPresenter<IBussiness>): Promise<void>;
-	getStoreBySlug(slug: string, presenter: IPresenter<IBussiness>): Promise<void>
+export interface IBusinessUseCase {
+	create(business: IBusiness, presenter: IPresenter<IBusiness>): Promise<void>
+	one(businessId: string, presenter: IPresenter<IBusiness>): Promise<void>
+	delete(businessId: string, presenter: IPresenter<IBusiness>): Promise<void>
+	all(presenter: IPresenter<IBusiness>): Promise<void>;
+	getStoreBySlug(slug: string, presenter: IPresenter<IBusiness>): Promise<void>
 }
 
-class BussinessUseCase extends BaseUseCase<IBussiness> implements IBussinessUseCase {
+class BusinessUseCase extends BaseUseCase<IBusiness> implements IBusinessUseCase {
 	
 	constructor(
 		validate: IValiditionUseCase,
-		private repository: Repository<IBussiness>,
+		private repository: Repository<IBusiness>,
 		private userUseCase: IUserUseCase
 	) {
 		super(validate);
 	}
 
-	async create(bussiness: IBussiness, presenter: IPresenter<IBussiness>) {
+	async create(business: IBusiness, presenter: IPresenter<IBusiness>) {
 		
-		this.userUseCase.one(bussiness.merchant[0].eamil, { 
-			one: (user: IUser) => {
-				console.log(user);
+		const businessEntity = new Business();
+		const { desciprtion, title, slug, phone, email, merchant } = business;
+		
+		await this.userUseCase.one(merchant[0].id, { 
+			one: (user) => {
+				businessEntity.merchant = [user];
 			}
 		});
+
+		businessEntity.desciprtion = desciprtion;
+		businessEntity.title = title;
+		businessEntity.slug = slug;
+		businessEntity.phone = phone;
+		businessEntity.email = email;
+
+		await super.validate(business);
+
+		const savedbusiness = await this.repository.save(businessEntity);
+		presenter.create(savedbusiness);
+
+		// try {
 			
-		await super.validate(bussiness);
+		// } catch(e) {
+		// 	presenter.alreadyExistError();
+		// }
+	
+	}
+
+	async one(businessId: string, presenter: IPresenter<IBusiness>) {
+		const business = await this.repository.findOne(businessId, { relations: ["merchant"] });
 		
-		// Create bussiness entity
-		const bussinessEntity = new Business();
-		const { desciprtion, title, slug, phone, email, merchant } = bussiness;
-
-		bussinessEntity.desciprtion = desciprtion;
-		bussinessEntity.title = title;
-		bussinessEntity.slug = slug;
-		bussinessEntity.phone = phone;
-		bussinessEntity.email = email;
-		bussinessEntity.merchant = merchant;
-
-		// Save bussiness
-		const savedbussiness = await this.repository.save(bussinessEntity);
-		
-		presenter.create(savedbussiness);
+		presenter.one(business);
 	}
 
-	async one(bussinessId: string, presenter: IPresenter<IBussiness>) {
-		const bussiness = await this.repository.findOne(bussinessId);
-		
-		presenter.one(bussiness);
+	async all(presenter: IPresenter<IBusiness>) {
+		const businesss = await this.repository.find({ relations: ["merchant"] });
+
+		presenter.all(businesss);
 	}
 
-	async all(presenter: IPresenter<IBussiness>) {
-		const bussinesss = await this.repository.find();
+	async delete(businessId:string, presenter: IPresenter<IBusiness>) {
+		const businessToRemove = await this.repository.findOneOrFail(businessId, { relations: ["merchant"] });
 
-		presenter.all(bussinesss);
+		await this.repository.remove(businessToRemove);
+
+		presenter.delete(businessToRemove.id);
 	}
 
-	async delete(bussinessId:string, presenter: IPresenter<IBussiness>) {
-		const bussinessToRemove = await this.repository.findOne(bussinessId);
-		await this.repository.remove(bussinessToRemove);
+	async getStoreBySlug(slug: string, presenter: IPresenter<IBusiness>) {
+		const business = await this.repository.findOneOrFail({ slug }, { relations: ["merchant"] });
 
-		presenter.delete(bussinessToRemove.id);
+		presenter.one(business);
 	}
-
-	async getStoreBySlug(slug: string, presenter: IPresenter<IBussiness>) {
-		const bussiness = await this.repository.findOneOrFail({ slug });
-
-		presenter.one(bussiness);
-	}
-
-	// private async isbussinessExistByEmail(email: string) {
-	// 	const bussiness = await this.repository.findOne({where: {email}});
-		
-	// 	if (bussiness && bussiness.eamil === email) {
-	// 		throw new Error("bussiness already exist");
-	// 	}
-	// }
 }
 
-export default BussinessUseCase;
+export default BusinessUseCase;

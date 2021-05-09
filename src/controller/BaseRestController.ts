@@ -7,10 +7,4 @@ interface IBaseRestController {
 	remove(request: Request, response: Response, next: NextFunction): Promise<void>
 }
 
-class BaseResetController {
-    
-}
-
-export default BaseResetController;
-
 export { IBaseRestController };

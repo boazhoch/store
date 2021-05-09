@@ -7,11 +7,9 @@ export default class DateEntity extends Base {
 
     @Column("date")
     @CreateDateColumn()
-    @IsDate()
     createdAt: Date;
 
     @Column("date")
     @UpdateDateColumn()
-    @IsDate()
     updatedAt: Date;
 }

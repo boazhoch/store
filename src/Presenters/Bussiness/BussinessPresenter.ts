@@ -1,12 +1,12 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import StatusCodes from "http-status-codes";
 import { IPresenter, PresenterFactory } from "../types/type";
-import { IBussiness } from "../../entity/Business/Business";
+import { IBusiness } from "../../entity/Business/Business";
 import Presenter from "..";
 
-class BussinesPresneter<Model extends IBussiness> extends Presenter implements IPresenter<Model> {
-	constructor(req: Request, res: Response) {
-		super(req,res);
+class BussinesPresneter<Model extends IBusiness> extends Presenter implements IPresenter<Model> {
+	constructor(req: Request, res: Response, next: NextFunction) {
+		super(req,res, next);
 	}
 
 	public one(model: Model) {
@@ -28,4 +28,4 @@ class BussinesPresneter<Model extends IBussiness> extends Presenter implements I
 
 export default BussinesPresneter;
 
-export const bussinessPresenterFactory: PresenterFactory<IBussiness> = (req: Request, res:Response) => new BussinesPresneter(req,res);
+export const businessPresenterFactory: PresenterFactory<IBusiness> = (req: Request, res:Response, next: NextFunction) => new BussinesPresneter(req, res, next);

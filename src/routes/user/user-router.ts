@@ -1,28 +1,23 @@
 import passport = require("passport")
 import { Route } from "../../services/factories/router-factory";
-import { IBaseRestController } from "../../controller/Controller";
+import { IBaseRestController } from "../../controller/BaseRestController";
 
-const userRoutes = (controller: IBaseRestController): Route<IBaseRestController>[] => [{
+const userRoutes = (controller: IBaseRestController): Route[] => [{
 	handlerType: "get",
 	path: "/users",
-	controller: controller,
-	action: "all"
+	action: controller.all
 }, {
 	handlerType: "get",
 	path: "/users/:id",
-	preMiddlewares: passport.authenticate("jwt", {session: false}),
-	controller: controller,
-	action: "one"
+	action: controller.one
 }, {
 	handlerType: "post",
 	path: "/users",
-	controller: controller,
-	action: "save"
+	action: controller.save
 }, {
 	handlerType: "delete",
 	path: "/users/:id",
-	controller: controller,
-	action: "remove"
+	action: controller.save
 }];
 
 export default userRoutes;

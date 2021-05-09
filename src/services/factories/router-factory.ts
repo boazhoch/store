@@ -1,30 +1,39 @@
 import { IRouter, Router,  NextFunction, Request, Response,  } from "express";
-import { IBaseRestController } from "../../controller/Controller";
 
-type Routes<Controller extends IBaseRestController> = Route<Controller>[];
+type Routes = Route[];
 
 type Middleware = (req: Request, res: Response, next: NextFunction) => void
 
-export type Route<Controller extends IBaseRestController> = {
+export type Route = {
     path: string, 
     handlerType: HandlerType
-    controller: Controller,
-	action: keyof Controller,
+	action: Handler,
 	preMiddlewares?: Middleware[]
 	postMiddlewares?: Middleware[]
 }
 
 type HandlerType = keyof Pick<IRouter, "all" | "get" | "post" |"delete"|"patch">;
 
-const routerFactory = <Controller extends IBaseRestController = IBaseRestController>(routes: Routes<Controller>) => {
+type Handler = (req: Request, res: Response, next: NextFunction) => Promise<void>
+
+export function wrapMiddlewareWithError(handler: Handler) {
+	return async function(req: Request, res: Response, next: NextFunction) {
+		try {
+			await handler(req, res, next);
+		} catch (e) {
+			next(e);
+		}
+	};
+}
+
+const routerFactory = (routes: Routes) => {
 	const router = Router();
 
 	for (const routeKey in routes) {
 		const route = routes[routeKey];
-		const { path, handlerType, controller, action, preMiddlewares = [], postMiddlewares = [] } = route;
+		const { path, handlerType,  action, preMiddlewares = [], postMiddlewares = [] } = route;
 
-		//@ts-ignore
-		router[handlerType](path, preMiddlewares, controller[action], postMiddlewares);
+		router[handlerType](path, preMiddlewares, wrapMiddlewareWithError(action), postMiddlewares);
 	}
 
 	return router;

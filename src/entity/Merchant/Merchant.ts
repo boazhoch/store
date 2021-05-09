@@ -5,8 +5,8 @@ import User, { UserRoles } from "../User/User";
 
 @Entity()
 export class Merchant extends User {
-	@ManyToOne(() => Business, bussiness => bussiness.merchant)
-	bussiness: Business;
+	@ManyToOne(() => Business, business => business.merchant)
+	business: Business;
 
     @Column("text")
     role: UserRoles.Merchant

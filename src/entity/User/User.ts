@@ -1,12 +1,13 @@
 import { IAddressEntity } from "./../Address/Address";
 import { IsBoolean, IsEmail, IsString } from "class-validator";
 import {
-	Entity, Column, OneToOne, JoinColumn,
+	Entity, Column, OneToOne, JoinColumn, ManyToOne,
 } from "typeorm";
 import { IUser } from "./type";
 import { Match } from "../../services/validation/addons";
 import AddressEntity from "../Address/Address";
 import DateEntity from "../Date/Date";
+import { Business } from "../Business/Business";
 
 export enum UserRoles {
     User,
@@ -26,7 +27,7 @@ export default class User extends DateEntity implements IUser {
 
     @Column("text", {unique: true})
     @IsEmail()
-    eamil: string;
+    email: string;
 
     @Column("text")
     @IsString()
@@ -46,4 +47,11 @@ export default class User extends DateEntity implements IUser {
     @Column()
     @IsBoolean()
     isAdmin: boolean;
+
+    @Column()
+    @IsBoolean()
+    isMerchant: boolean;
+
+    @ManyToOne(() => Business, business => business.merchant)
+	business: Business;
 }

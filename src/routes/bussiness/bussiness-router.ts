@@ -1,31 +1,30 @@
+import passport = require("passport");
 import { IBusinessController } from "../../controller/BussinessController";
 import { Route } from "../../services/factories/router-factory";
 
-const bussinessRoutes = (controller: IBusinessController): Route<IBusinessController>[] => [{
+const businessRoutes = (controller: IBusinessController): Route[] => [{
 	handlerType: "get",
-	path: "/bussiness",
-	controller: controller,
-	action: "all"
+	path: "/business",
+	action: controller.all,
 }, {
 	handlerType: "get",
-	path: "/bussiness/:id",
-	controller: controller,
-	action: "one"
+	path: "/business/:id",
+	action: controller.one
 }, {
 	handlerType: "post",
-	path: "/bussiness",
-	controller: controller,
-	action: "save"
+	path: "/business",
+	action: controller.save,
+	preMiddlewares: passport.authenticate("jwt", { session: false }),
 }, {
 	handlerType: "delete",
-	path: "/bussiness/:id",
-	controller: controller,
-	action: "remove"
+	path: "/business/:id",
+	action: controller.remove,
+	preMiddlewares: passport.authenticate("jwt", { session: false }),
 }, {
 	handlerType: "get",
 	path: "/",
-	controller: controller,
-	action: "one"
+	preMiddlewares: passport.authenticate("jwt", { session: false }),
+	action: controller.getStoreBySlug,
 }];
 
-export default bussinessRoutes;
+export default businessRoutes;
